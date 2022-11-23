@@ -5,15 +5,16 @@
 #include <sys/ioctl.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <cstdio>
 
 
 #define DEV_NAME "/dev/gpiochip0"
 
 
-int main(int argc, char *const *argv)
+int main(int argc, char * argv[])
 {
     int fd;
-    int ret_ioctl;
+    int ret;
     struct gpiochip_info info;
     struct gpioline_info line_info;
 
