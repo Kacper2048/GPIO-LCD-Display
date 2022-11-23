@@ -5,13 +5,13 @@
 #include <sys/ioctl.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <cstdio>
+#include <linux/gpio.h>
 
 
 #define DEV_NAME "/dev/gpiochip0"
 
 
-int main(int argc, char * argv[])
+int main(int argc, char *argv[])
 {
     int fd;
     int ret;
