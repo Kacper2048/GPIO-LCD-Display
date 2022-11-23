@@ -11,13 +11,17 @@
 #define DEV_NAME "/dev/gpiochip0"
 
 int open_file(); //return fd or -1 after opening the file
+int init_chip(int fd, gpiochip_info & info); //uses the ioctl to check if the chip is avaiable and then to get info form it
 void close_file(int fd);
 void close_request(gpiohandle_request &rq);
 
-int init_chip(int fd, gpiochip_info & info); //uses the ioctl to check if the chip is avaiable and then to get info form it
 void show_info(int fd, gpiochip_info const & info); //It return list of pins's layout 
+
 int init_4pins(int fd, gpiohandle_request &rq); //it inits 4pins as output, 
-int send_4bit(int fd,gpiohandle_request &rq);
+int send_4bit(int fd,gpiohandle_request &rq,bool *tab); //send 4bit info to the reciving device
+
+int init_8pins(int fd, gpiohandle_request &rq); //it inits 8pins as output, 
+int send_8bit(int fd,gpiohandle_request &rq,bool *tab); //send 8bit info to the reciving device
 
 
 int main(int argc, char *argv[])
@@ -136,50 +140,71 @@ int init_4pins(int fd, gpiohandle_request &rq)
     return ret;
 }
 
-int send_4bit(int fd,gpiohandle_request &rq)
+int send_4bit(int fd,gpiohandle_request &rq,bool *tab)
 {
     int ret;
     gpiohandle_data data;
-    bool tab[4]{1,1,1,1};
 
-    data.values[0] = 1; // HIGH offset 11
-    data.values[1] = 1; // LOW offset 13
-    data.values[2] = 1; // LOW offset 15
-    data.values[3] = 1; // LOW offset 16
-
-    for(int i=0; i<100;i++)
+    //set the specific bit value onto the specific pin
+    for(int i=0;i<4;i++)
     {
-        if(i%4==0)
-        {
-            data.values[0] = (int)tab[0]; // HIGH offset 11
-            tab[0] = !tab[0];
-        }
-        else if(i%4==1)
-        {
-            data.values[1] = (int)tab[1]; // HIGH offset 11
-            tab[1] = !tab[1];
-        }
-        else if(i%4==2)
-        {
-            data.values[2] = (int)tab[2]; // HIGH offset 11
-            tab[2] = !tab[2];
-        }
-        else if(i%4==3)
-        {
-            data.values[3] = (int)tab[3]; // HIGH offset 11
-            tab[3] = !tab[3];
-        }
-
-        ret = ioctl(rq.fd, GPIOHANDLE_SET_LINE_VALUES_IOCTL, &data);
-
-        if (ret == -1)
-        {
-            printf("Unable to set line value using ioctl : %s", strerror(errno));
-        }
-
-        usleep(200000);
+        data.values[i] = (int)tab[i];
     }
-    
+
+    ret = ioctl(rq.fd, GPIOHANDLE_SET_LINE_VALUES_IOCTL, &data);
+
+    if (ret == -1)
+    {
+        printf("Unable to set line value using ioctl : %s", strerror(errno));
+    }
+
+    return ret;
+}
+
+int init_8pins(int fd, gpiohandle_request &rq)
+{
+    int ret;
+
+    //setting the output pins 
+    rq.lineoffsets[0] = 17; //11
+    rq.lineoffsets[1] = 18; //12
+    rq.lineoffsets[2] = 27; //13
+    rq.lineoffsets[3] = 22; //15
+    rq.lineoffsets[4] = 23; //16
+    rq.lineoffsets[5] = 25; //22
+    rq.lineoffsets[6] = 5;  //29
+    rq.lineoffsets[7] = 6;  //31
+
+    rq.lines = 8;
+    rq.flags = GPIOHANDLE_REQUEST_OUTPUT;
+
+    ret = ioctl(fd, GPIO_GET_LINEHANDLE_IOCTL, &rq);
+    if (ret == -1)
+    {
+        printf("Unable to set line value using ioctl : %s", strerror(errno));
+    }
+
+    return ret;
+}
+
+int send_8bit(int fd,gpiohandle_request &rq,bool *tab)
+{
+    int ret;
+    gpiohandle_data data;
+
+    //set the specific bit value onto the specific pin
+    for(int i=0;i<8;i++)
+    {
+        data.values[i] = (int)tab[i];
+    }
+ 
+    ret = ioctl(rq.fd, GPIOHANDLE_SET_LINE_VALUES_IOCTL, &data);
+
+    if (ret == -1)
+    {
+        printf("Unable to set line value using ioctl : %s", strerror(errno));
+    }
+
     return ret;
 }
 
