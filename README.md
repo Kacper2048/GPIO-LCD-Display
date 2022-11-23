@@ -1,1 +1,1 @@
-# LCD_linux_driver
+# GPIO LCD - Linux (User Space)
