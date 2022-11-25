@@ -1,7 +1,6 @@
 #include "own_gpio.h"
 #include <iostream>
 
-void to_bits8(int val,bool * tab,int size);
 using namespace std;
 
 int main(int argc, char *argv[])
@@ -11,9 +10,10 @@ int main(int argc, char *argv[])
     struct gpioline_info line_info;
     struct gpiohandle_request rq;
 
-    int fd = open_file();
+    //int fd = open_file();
     bool tab[8]{0,0,0,0,0,0,0,0};
 
+    /*
     if(fd > -1)
     {
        if(init_chip(fd,info) > -1)
@@ -37,7 +37,18 @@ int main(int argc, char *argv[])
         
 
     }
- 
+    */
+
+    srand(time(0));
+    for(int i=0;i<20;i++)
+    {
+        for(int i=0;i<8;i++)
+        {
+            to_bits8(rand() % 100+1,tab,8);
+            cout << tab[i];
+        }
+        cout << endl;
+    }
     return 0;
 }
 
