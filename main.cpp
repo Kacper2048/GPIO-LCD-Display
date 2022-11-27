@@ -4,11 +4,11 @@
 
 using namespace std;
 
-void LCD_init();
+void LCD_Init();
 void LCD_DATA(int);
-void LCD_CMD(unsigned char CMD)
+void LCD_CMD(unsigned char CMD);
 
-#define LCD_EN_Delay 100000
+#define LCD_EN_Delay 500
 
 bool tab[8]{0,0,0,0,0,0,0,0};
 int fd;
@@ -43,7 +43,7 @@ void LCD_DATA(int val)
 {
     for(int i=0;i<4;i++)
     {
-        (val & (pow(2,i)))? tab[i] = 1 : tab[i] = 0;
+        (val & static_cast<int>(pow(2,i)))? tab[i] = 1 : tab[i] = 0;
     }
 
 }
@@ -69,18 +69,14 @@ void LCD_CMD(unsigned char CMD)
 
 void LCD_Init()
 {
-  // IO Pin Configurations
-  LCD_DATA_PORT_D = 0x00;
-  LCD_RS_D = 0;
-  LCD_EN_D = 0;
   // The Init. Procedure
   LCD_DATA(0x00);
-  __delay_ms(30);
-  __delay_us(LCD_EN_Delay);
+  usleep(30);
+  usleep(LCD_EN_Delay);
   LCD_CMD(0x03);
-  __delay_ms(5);
+  usleep(5);
   LCD_CMD(0x03);
-  __delay_us(150);
+  usleep(150);
   LCD_CMD(0x03);
   LCD_CMD(0x02);
   LCD_CMD(0x02);
