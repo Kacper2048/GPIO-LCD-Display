@@ -36,10 +36,10 @@ int main(int argc, char *argv[])
             init_8pins(fd,rq);
 
             LCD_Init();
-            //LCD_Clear();
-            //LCD_Set_Cursor(1,1);
-            //LCD_String("hej");
-            LCD_DATA(0x0E);
+            LCD_Clear();
+            LCD_Set_Cursor(1,1);
+            LCD_String("hej");
+            //LCD_DATA(0x0E);
             cout << "ok chyba powinno być ok" << endl;
             usleep(5000000);
             close_file(fd);
