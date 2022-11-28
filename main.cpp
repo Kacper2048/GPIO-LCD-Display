@@ -18,14 +18,14 @@ void LCD_Set_Cursor(unsigned char r, unsigned char c);
 
 bool tab[8]{0,0,0,0,0,0,0,0};
 int fd;
+
+//these structures are needed to all operations involved with gpio 
 struct gpiochip_info info;
 struct gpioline_info line_info;
 struct gpiohandle_request rq;
 
 int main(int argc, char *argv[])
 {
-    //these structures are needed to all operations involved with gpio 
-
     fd = open_file();
     
     if(fd > -1)
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
             LCD_Init();
             LCD_Clear();
             LCD_Set_Cursor(1,1);
-            LCD_String("hej");
+            //LCD_String("hej");
             
             cout << "ok chyba powinno być ok" << endl;
             usleep(5000000);
