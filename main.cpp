@@ -163,7 +163,7 @@ void LCD_CMD(unsigned char CMD) //4bit mode
 void LCD_Init()
 {
   // The Init. Procedure //1st option
-  
+  /**
   LCD_DATA(0x00);
   usleep(30);
   usleep(LCD_EN_Delay);
@@ -179,5 +179,13 @@ void LCD_Init()
   LCD_CMD(0x0C);
   LCD_CMD(0x00);
   LCD_CMD(0x06);
+    */
 
+    LCD_CMD(0x33);
+    LCD_CMD(0x32);
+    LCD_CMD(0x28); // 4 bit mode
+    LCD_CMD(0x0E); // clear the screen
+    LCD_CMD(0x01); // display on cursor on
+    LCD_CMD(0x06); // increment cursor
+    LCD_CMD(0x80); // row 1 column 1
 }
