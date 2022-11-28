@@ -9,6 +9,7 @@ void LCD_Init();
 void LCD_DATA(int);
 void LCD_CMD(unsigned char CMD);
 void LCD_String(string str);
+void LCD_xxx(int val);
 
 #define LCD_EN_Delay 500
 
@@ -45,15 +46,15 @@ void LCD_String(string str)
 {
     for(int i=0;i<str.length(); i++)
     {
-        LCD_DATA(static_cast<int>(str[i]));
+        LCD_xxx(static_cast<int>(str[i]));
     }
 }
 
-void LCD_DATA(int val) //The main goal of that function is to change int value to binary form 
+void LCD_xxx(int val) //The main goal of that function is to change int value to binary form 
 {
-    // Select Command Register
+    // Select Data Register
     //RS = 0;
-    tab[5] = 0;
+    tab[5] = 1;
 
     int upper = val & 0xF0;
     int lower = val & 0x0F;
@@ -74,8 +75,6 @@ void LCD_DATA(int val) //The main goal of that function is to change int value t
     send_8bit(fd,rq,tab);
     
 
-
-
     //sending lower part of data to lcd
     for(int i=0;i<4;i++)
     {
@@ -90,6 +89,28 @@ void LCD_DATA(int val) //The main goal of that function is to change int value t
 
     tab[4] = 0;
     send_8bit(fd,rq,tab); 
+
+}
+
+void LCD_DATA(int val) //The main goal of that function is to change int value to binary form 
+{
+    // Select Command Register
+    //RS = 0;
+    tab[5] = 0;
+
+    for(int i=0;i<4;i++)
+    {
+        (val & static_cast<int>(pow(2,i)))? tab[i] = 1 : tab[i] = 0;
+    }
+   
+    // Send The EN Clock Signal
+    //EN = 1;
+    tab[4] = 1;
+    usleep(LCD_EN_Delay);
+    send_8bit(fd,rq,tab); 
+    usleep(LCD_EN_Delay);
+    tab[4] = 0;
+    send_8bit(fd,rq,tab);
 
 }
 
