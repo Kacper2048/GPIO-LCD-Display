@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 
             LCD_Init();
             LCD_Clear();
-            LCD_Set_Cursor(1,1);
+            //LCD_Set_Cursor(1,1);
             LCD_String("hej");
             //LCD_DATA(0x0E);
             cout << "ok chyba powinno być ok" << endl;
