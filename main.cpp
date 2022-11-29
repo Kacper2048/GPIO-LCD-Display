@@ -11,7 +11,7 @@ void LCD_CMD(unsigned char CMD);
 void LCD_String(string str);
 void LCD_xxx(int val);
 void LCD_Clear();
-void LCD_Set_Cursor(unsigned char r, unsigned char c);
+void LCD_Set_Cursor(int r, int c);
 
 
 #define LCD_EN_Delay 500
@@ -27,7 +27,8 @@ struct gpiohandle_request rq;
 int main(int argc, char *argv[])
 {
     fd = open_file();
-    
+    string str;
+
     if(fd > -1)
     {
        if(init_chip(fd,info) > -1)
@@ -37,9 +38,21 @@ int main(int argc, char *argv[])
 
             LCD_Init();
             LCD_Clear();
-            //LCD_Set_Cursor(1,1);
-            LCD_String("hej");
-            //LCD_DATA(0x0E);
+
+            for(int i=0;i<1;)
+            {
+                getline(cin,str,'\n');
+                if(str[0] = q && str.length() == 1)
+                {
+                    break;
+                }
+
+                LCD_Clear();
+                LCD_Set_Cursor(1,1)
+                LCD_String(str);
+            }
+            
+            
             cout << "ok chyba powinno być ok" << endl;
             usleep(5000000);
             close_file(fd);
@@ -50,12 +63,12 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void LCD_Set_Cursor(unsigned char r, unsigned char c)
+void LCD_Set_Cursor(int r, int c)
 {
   unsigned char Temp,Low4,High4;
   if(r == 1)
   {
-    Temp = 0x80 + c - 1; //0x80 is used to move the cursor
+    Temp = 0x80;// + c - 1; //0x80 is used to move the cursor
     High4 = Temp >> 4;
     Low4 = Temp & 0x0F;
     LCD_CMD(High4);
@@ -64,7 +77,7 @@ void LCD_Set_Cursor(unsigned char r, unsigned char c)
 
   if(r == 2)
   {
-    Temp = 0xC0 + c - 1;
+    Temp = 0xC0;// + c - 1;
     High4 = Temp >> 4;
     Low4 = Temp & 0x0F;
     LCD_CMD(High4);
