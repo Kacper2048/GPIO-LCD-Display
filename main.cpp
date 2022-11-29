@@ -44,6 +44,7 @@ int main(int argc, char *argv[])
             {
                 LCD_Set_Cursor(1);
                 getline(cin,str,'\n');
+                LCD_Clear();
                 LCD_String(str);
 
                 str = "To zajebiscie";
@@ -51,16 +52,17 @@ int main(int argc, char *argv[])
                 LCD_Set_Cursor(2);
                 getline(cin,str,'\n');
                 LCD_String(str);
-                LCD_Clear();
+
                 if(str[0] == 'q' && str.length() == 1)
                 {
                     break;
                 }
+
+
             }
             
             
             cout << "ok chyba powinno być ok" << endl;
-            usleep(1000000);
             close_file(fd);
         }
         
@@ -68,6 +70,7 @@ int main(int argc, char *argv[])
     }
     return 0;
 }
+
 
 void LCD_Blinking_Cursor(bool state)
 {
@@ -125,8 +128,14 @@ void LCD_Write_Char(char Data)
 
 void LCD_Clear()
 {
-    LCD_CMD(0);
-    LCD_CMD(1);
+    string str = "                "; // 16x " "
+    LCD_Set_Cursor(1);
+    LCD_String(str);
+
+    LCD_Set_Cursor(2);
+    LCD_String(str);
+
+    LCD_Set_Cursor(1);
 }
 
 void LCD_String(string str)
