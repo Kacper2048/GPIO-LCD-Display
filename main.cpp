@@ -11,10 +11,13 @@ void LCD_CMD(unsigned char CMD);
 void LCD_String(string str);
 void LCD_xxx(int val);
 void LCD_Clear();
-void LCD_Set_Cursor(int r, int c);
+void LCD_Set_Cursor(int r); //Set line (r=1 line=1, r=2 line=2, the bound of column is 1-16)
+void LCD_Blinking_Cursor(bool state); //Turn on(1) or turn off(0) blinking cursor
+
 
 
 #define LCD_EN_Delay 500
+#define LCD_EN_Pulse 300
 
 bool tab[8]{0,0,0,0,0,0,0,0};
 int fd;
@@ -37,24 +40,27 @@ int main(int argc, char *argv[])
             init_8pins(fd,rq);
 
             LCD_Init();
-            LCD_Clear();
-
             for(int i=0;i<1;)
             {
+                LCD_Set_Cursor(1);
                 getline(cin,str,'\n');
-                if(str[0] = q && str.length() == 1)
+                LCD_String(str);
+
+                str = "To zajebiscie";
+
+                LCD_Set_Cursor(2);
+                getline(cin,str,'\n');
+                LCD_String(str);
+                LCD_Clear();
+                if(str[0] == 'q' && str.length() == 1)
                 {
                     break;
                 }
-
-                LCD_Clear();
-                LCD_Set_Cursor(1,1)
-                LCD_String(str);
             }
             
             
             cout << "ok chyba powinno być ok" << endl;
-            usleep(5000000);
+            usleep(1000000);
             close_file(fd);
         }
         
@@ -63,36 +69,58 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void LCD_Set_Cursor(int r, int c)
+void LCD_Blinking_Cursor(bool state)
 {
-  unsigned char Temp,Low4,High4;
-  if(r == 1)
-  {
-    Temp = 0x80;// + c - 1; //0x80 is used to move the cursor
-    High4 = Temp >> 4;
-    Low4 = Temp & 0x0F;
-    LCD_CMD(High4);
-    LCD_CMD(Low4);
-  }
+    if(state)
+    {
+        LCD_DATA(0x00);
+        LCD_DATA(0x0F);
+    }
+    else
+    {
+        LCD_DATA(0x00);
+        LCD_DATA(0x0C);
+    }
+}
 
-  if(r == 2)
-  {
-    Temp = 0xC0;// + c - 1;
-    High4 = Temp >> 4;
-    Low4 = Temp & 0x0F;
-    LCD_CMD(High4);
-    LCD_CMD(Low4);
-  }
+void LCD_Set_Cursor(int r)
+{
+    unsigned char Temp,Low4,High4;
+    if(r == 1)
+    {
+        Temp = 0x80;
+        High4 = Temp >> 4;
+        Low4 = 0x00;
+        LCD_CMD( High4 );
+        LCD_CMD(Low4);
+
+        for(int i=0;i<8;i++)
+        {
+            LCD_CMD( 0x10>>4);
+            LCD_CMD(0x00);
+        }
+
+    }
+
+    if(r == 2)
+    {
+        Temp = 0xA0;
+        High4 = Temp >> 4;
+        Low4 = 0x00;
+        LCD_CMD(High4);
+        LCD_CMD(Low4);
+    }
 }
 
 void LCD_Write_Char(char Data)
 {
-  char Low4,High4;
-  Low4 = Data & 0x0F;
-  High4 = Data & 0xF0;
+    char Low4,High4;
+    High4 = Data & 0xF0;
+    Low4 = Data & 0x0F;
 
-  LCD_xxx(static_cast<int>(High4>>4));
-  LCD_xxx(static_cast<int>(Low4));
+
+    LCD_xxx(static_cast<int>(High4>>4));
+    LCD_xxx(static_cast<int>(Low4));
 }
 
 void LCD_Clear()
@@ -146,11 +174,12 @@ void LCD_DATA(int val) //The main goal of that function is to change int value t
     // Send The EN Clock Signal
     //EN = 1;
     tab[4] = 1;
-    usleep(LCD_EN_Delay);
     send_8bit(fd,rq,tab); 
-    usleep(LCD_EN_Delay);
+    usleep(LCD_EN_Pulse);
+
     tab[4] = 0;
     send_8bit(fd,rq,tab);
+    usleep(LCD_EN_Pulse);
 
 }
 
@@ -175,31 +204,25 @@ void LCD_CMD(unsigned char CMD) //4bit mode
 
 void LCD_Init()
 {
-  // The Init. Procedure //1st option
+    // The Init. Procedure //1st option
   
-  LCD_DATA(0x00);
-  usleep(30);
-  usleep(LCD_EN_Delay);
-  LCD_CMD(0x03);
-  usleep(5);
-  LCD_CMD(0x03);
-  usleep(150);
-  LCD_CMD(0x03);
-  LCD_CMD(0x02);
-  LCD_CMD(0x02);
-  LCD_CMD(0x08);
-  LCD_CMD(0x00);
-  LCD_CMD(0x0C);
-  LCD_CMD(0x00);
-  LCD_CMD(0x06);
+    LCD_DATA(0x00);
+    usleep(30);
+    usleep(LCD_EN_Delay);
+    LCD_CMD(0x03);
+    usleep(5);
+    LCD_CMD(0x03);
+    usleep(150);
+    LCD_CMD(0x03);
+    LCD_CMD(0x02);
+    LCD_CMD(0x02);
+    LCD_CMD(0x08);
+    LCD_CMD(0x00);
+    LCD_CMD(0x0C);
+    LCD_CMD(0x00);
+    LCD_CMD(0x06);
+
+    LCD_CMD(0x00);
+    LCD_CMD(0x01);
     
-/*
-    LCD_CMD(0x33);
-    LCD_CMD(0x32);
-    LCD_CMD(0x28); // 4 bit mode
-    LCD_CMD(0x0E); // clear the screen
-    LCD_CMD(0x01); // display on cursor on
-    LCD_CMD(0x06); // increment cursor
-    LCD_CMD(0x80); // row 1 column 1
-*/
 }
