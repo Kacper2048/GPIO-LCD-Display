@@ -30,6 +30,10 @@ void LCD_Blinking_Cursor(bool state); //Turn on(1) or turn off(0) blinking curso
 bool tab[8]{0,0,0,0,0,0,0,0};
 int fd;
 
+//Structures needed to get array from bash
+FILE * stream;
+char * array;
+
 //these structures are needed to all operations involved with gpio 
 struct gpiochip_info info;
 struct gpioline_info line_info;
@@ -37,7 +41,16 @@ struct gpiohandle_request rq;
 
 int main(int argc, char *argv[])
 {
+    const char * temp_command = "vcgencmd measure_temp";
+
+    array = (char *)malloc(1024);
+    for(int i=0;i<1024;i++)
+    {
+        array[i] = 0;
+    }
+
     fd = open_file();
+
     string str;
 
     if(fd > -1)
@@ -68,11 +81,24 @@ int main(int argc, char *argv[])
             }
             */
 
-            for(int i=0;i<1;)
+
+            for(int i=0;i<100;i++)
             {
                 //send data to first line
                 LCD_Set_Cursor(1);
-                str = system("vcgencmd measure_temp");
+                stream = popen(temp_command,"r");
+                fgets(array,1024,stream);
+                
+                int z = 0;
+                while(array[z] != '\n')
+                {
+                    str = str + array[z];
+                    cout << array[z];
+                    z++;
+                }
+
+                cout << str << endl;
+
                 LCD_Clear();
                 LCD_String(str);
 
@@ -81,6 +107,8 @@ int main(int argc, char *argv[])
                 {
                     break;
                 }
+
+                usleep(500000); //check temp every 0.5 second
             }
 
             
