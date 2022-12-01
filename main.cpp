@@ -6,27 +6,27 @@
 #include <stdio.h>
 
 
-/*      LAYOUT OF THE 4BIT DATA ("tab" array)
- *
- *      PO4 PO5 PO6 PO7 EN RS
- *
- */
+#define LCD_EN_Delay 500
+#define LCD_EN_Pulse 500
+#define MALLOC_SIZE 128
 
 using namespace std;
 
+/*      LAYOUT OF THE 4BIT DATA ("tab" array) [POx = Pin Output number_of_pin_on_LCD ]
+ *
+ *      PO4 PO5 PO6 PO7 EN RS
+ *      
+*/
+
 void LCD_Init();
-void LCD_CMD(unsigned char command); //This function send data to lcd in 4bit mode
+void LCD_Command(unsigned char command); //This function send data to lcd in 4bit mode
 void LCD_String(string str);
 void LCD_xxx(int val);  //The main goal of that function is to change int value to binary form
 void LCD_Clear();
 void LCD_Set_Cursor(int row); //Set line (r=1 line=1, r=2 line=2, the bound of column is 1-16)
 void LCD_Blinking_Cursor(bool state); //Turn on(1) or turn off(0) blinking cursor
 
-
-
-#define LCD_EN_Delay 500
-#define LCD_EN_Pulse 500
-
+//global variables
 bool tab[8]{0,0,0,0,0,0,0,0};
 int fd;
 
@@ -43,8 +43,8 @@ int main(int argc, char *argv[])
 {
     const char * temp_command = "vcgencmd measure_temp";
 
-    array = (char *)malloc(1024);
-    for(int i=0;i<1024;i++)
+    array = (char *)malloc(MALLOC_SIZE);
+    for(int i=0;i<MALLOC_SIZE;i++)
     {
         array[i] = 0;
     }
@@ -87,33 +87,36 @@ int main(int argc, char *argv[])
                 //send data to first line
                 LCD_Set_Cursor(1);
                 stream = popen(temp_command,"r");
-                fgets(array,1024,stream);
+                fgets(array,MALLOC_SIZE,stream);
                 
                 int z = 0;
                 while(array[z] != '\n')
                 {
                     str = str + array[z];
-                    cout << array[z];
                     z++;
                 }
-
-                cout << str << endl;
 
                 LCD_Clear();
                 LCD_String(str);
 
                 getline(cin,str,'\n');
-                if(str[0] == 'q' && str.length() == 1)
-                {
-                    break;
-                }
 
                 usleep(500000); //check temp every 0.5 second
+
+                //clearing data containers
+                str.clear();
+                for(int i=0;i<MALLOC_SIZE;i++)
+                {
+                    array[i] = 0;
+                }
+
+                pclose(stream);
             }
 
             
             cout << "Closing the program..." << endl;
             close_file(fd);
+            free(array);
         }
         
 
@@ -126,13 +129,13 @@ void LCD_Blinking_Cursor(bool state)
 {
     if(state)
     {
-        LCD_CMD(0x00);
-        LCD_CMD(0x0F);
+        LCD_Command(0x00);
+        LCD_Command(0x0F);
     }
     else
     {
-        LCD_CMD(0x00);
-        LCD_CMD(0x0C);
+        LCD_Command(0x00);
+        LCD_Command(0x0C);
     }
 }
 
@@ -141,14 +144,14 @@ void LCD_Set_Cursor(int row)
     unsigned char Temp,Low4,High4;
     if(row == 1)
     {
-        LCD_CMD(0x80 >> 4);
-        LCD_CMD(0x00);
+        LCD_Command(0x80 >> 4);
+        LCD_Command(0x00);
     }
 
     if(row == 2)
     {
-        LCD_CMD(0xC0 >> 4);
-        LCD_CMD(0x00);
+        LCD_Command(0xC0 >> 4);
+        LCD_Command(0x00);
     }
 }
 
@@ -206,7 +209,7 @@ void LCD_xxx(int val)
 
 }
 
-void LCD_CMD(unsigned char command) //4bit mode
+void LCD_Command(unsigned char command) //4bit mode
 {
     // Select Command Register
     tab[5] = 0;
@@ -231,23 +234,23 @@ void LCD_Init()
 {
     // The Init. Procedure //1st option
   
-    LCD_CMD(0x00);
+    LCD_Command(0x00);
     usleep(30);
     usleep(LCD_EN_Delay);
-    LCD_CMD(0x03);
+    LCD_Command(0x03);
     usleep(5);
-    LCD_CMD(0x03);
+    LCD_Command(0x03);
     usleep(150);
-    LCD_CMD(0x03);
-    LCD_CMD(0x02);
-    LCD_CMD(0x02);
-    LCD_CMD(0x08);
-    LCD_CMD(0x00);
-    LCD_CMD(0x0C);
-    LCD_CMD(0x00);
-    LCD_CMD(0x06);
+    LCD_Command(0x03);
+    LCD_Command(0x02);
+    LCD_Command(0x02);
+    LCD_Command(0x08);
+    LCD_Command(0x00);
+    LCD_Command(0x0C);
+    LCD_Command(0x00);
+    LCD_Command(0x06);
 
-    LCD_CMD(0x00);
-    LCD_CMD(0x01);
+    LCD_Command(0x00);
+    LCD_Command(0x01);
     
 }
