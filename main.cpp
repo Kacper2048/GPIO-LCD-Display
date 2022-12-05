@@ -4,7 +4,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <fcntl.h>
+#include <unistd.h>
 
 #define LCD_EN_Delay 500
 #define LCD_EN_Pulse 500
@@ -56,6 +57,7 @@ class LCD_GPIO
     std::string str,str2;
     int fd;
     int stat = 0;
+    char read_data[1024];
 };
 
 int main(int argc, char *argv[])
@@ -92,7 +94,77 @@ int main(int argc, char *argv[])
 
 void LCD_GPIO::LCD_get_memory_usage()
 {
+    string total;
+    string avail;
 
+    string number_total;
+    string number_avail;
+
+    int fd_mem = open("/proc/meminfo", O_NONBLOCK, O_RDONLY);
+
+    if(fd_mem > -1)
+    {
+        read(fd_mem,read_data,1024);
+        lseek(fd_mem,0,SEEK_SET);
+    }
+
+    int index = 0;
+
+    total.clear();
+    avail.clear();
+
+    for(int i=0;i<512;i++)
+    {
+        //total
+        if(read_data[i] == '\n')
+        {
+            index++;
+            i++;
+        }
+
+        if(index == 0)
+        {
+            total = total + read_data[i];
+        }
+
+        //available
+        if(index == 2)
+        {
+            avail = avail + read_data[i];
+        }
+    }   
+
+    cout << total << endl;
+    cout << avail << endl;
+
+    for(int i=0;i<total.length();i++)
+    {
+        if(static_cast<int>(total[i]) >=48 && static_cast<int>(total[i]) <=57)
+        {
+            number_total = number_total + total[i];
+        }
+    }
+
+    for(int i=0;i<avail.length();i++)
+    {
+        if(static_cast<int>(avail[i]) >=48 && static_cast<int>(avail[i]) <=57)
+        {
+            number_avail = number_avail + avail[i];
+        }
+    }
+
+    cout << number_total << endl;
+    cout << number_avail << endl;
+
+    float val_total = stoi(number_total) + 0.00; 
+    float val_avail = stoi(number_avail) + 0.00; 
+
+    int pro = (val_avail / val_total) * 100;
+
+    str2.clear();
+    str2 = "mem usage: " + to_string(pro) + "%";
+    LCD_String(str2);
+    close(fd_mem);
 }
 
 void LCD_GPIO::LCD_get_cpu_temp()
