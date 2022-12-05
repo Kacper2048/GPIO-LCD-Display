@@ -18,105 +18,71 @@ using namespace std;
  *      
 */
 
-void LCD_Init();
-void LCD_Command(unsigned char command); //This function send data to lcd in 4bit mode
-void LCD_String(string str);
-void LCD_xxx(int val);  //The main goal of that function is to change int value to binary form
-void LCD_Clear();
-void LCD_Set_Cursor(int row); //Set line (r=1 line=1, r=2 line=2, the bound of column is 1-16)
-void LCD_Blinking_Cursor(bool state); //Turn on(1) or turn off(0) blinking cursor
+class LCD_GPIO
+{
+    public:
+    LCD_GPIO();
+    ~LCD_GPIO();
+    
+    int LCD_Init();
+    void LCD_Command(unsigned char command); //This function send data to lcd in 4bit mode
+    void LCD_String(string str);
+    void LCD_xxx(int val);  //The main goal of that function is to change int value to binary form
+    void LCD_Clear();
+    void LCD_Set_Cursor(int row); //Set line (r=1 line=1, r=2 line=2, the bound of column is 1-16)
+    void LCD_Blinking_Cursor(bool state); //Turn on(1) or turn off(0) blinking cursor
+    void LCD_Write_Char(char Data);
+    
+    int LCD_If_error(){return stat;} 
+    int LCD_get_terminal_command();
+    
+    void LCD_get_cpu_temp();
+    void LCD_get_memory_usage();
 
-//global variables
-bool tab[8]{0,0,0,0,0,0,0,0};
-int fd;
+    private:
 
-//Structures needed to get array from bash
-FILE * stream;
-char * array;
+    //global variables
+    bool tab[8]{0,0,0,0,0,0,0,0};
 
-//these structures are needed to all operations involved with gpio 
-struct gpiochip_info info;
-struct gpioline_info line_info;
-struct gpiohandle_request rq;
+    //Structures needed to get array from bash
+    FILE * stream;
+    char * array;
+
+    //these structures are needed to all operations involved with gpio 
+    struct gpiochip_info info;
+    struct gpioline_info line_info;
+    struct gpiohandle_request rq;
+
+    std::string str,str2;
+    int fd;
+    int stat = 0;
+};
 
 int main(int argc, char *argv[])
 {
     const char * temp_command = "vcgencmd measure_temp";
+    LCD_GPIO lcd;
 
-    array = (char *)malloc(MALLOC_SIZE);
-    for(int i=0;i<MALLOC_SIZE;i++)
+    if(lcd.LCD_If_error() > -1)
     {
-        array[i] = 0;
-    }
-
-    fd = open_file();
-
-    string str;
-
-    if(fd > -1)
-    {
-       if(init_chip(fd,info) > -1)
+        if( lcd.LCD_Init() > -1)
         {
-            init_8pins(fd,rq);
-
-            LCD_Init();
-            /*
-            for(int i=0;i<1;)
+            for(int i=0;i<10;i++)
             {
+                lcd.LCD_Clear();
                 //send data to first line
-                LCD_Set_Cursor(1);
-                getline(cin,str,'\n');
-                LCD_Clear();
-                LCD_String(str);
+                lcd.LCD_Set_Cursor(1);
+                lcd.LCD_get_cpu_temp();
 
                 //send data to second line
-                LCD_Set_Cursor(2);
-                getline(cin,str,'\n');
-                LCD_String(str);
-
-                if(str[0] == 'q' && str.length() == 1)
-                {
-                    break;
-                }
-            }
-            */
-
-
-            for(int i=0;i<100;i++)
-            {
-                //send data to first line
-                LCD_Set_Cursor(1);
-                stream = popen(temp_command,"r");
-                fgets(array,MALLOC_SIZE,stream);
+                lcd.LCD_Set_Cursor(2);
+                lcd.LCD_get_memory_usage();
                 
-                int z = 0;
-                while(array[z] != '\n')
-                {
-                    str = str + array[z];
-                    z++;
-                }
+                usleep(1000000); //check info every 1.0 second
+              
+            }  
 
-                LCD_Clear();
-                LCD_String(str);
-
-                getline(cin,str,'\n');
-
-                usleep(500000); //check temp every 0.5 second
-
-                //clearing data containers
-                str.clear();
-                for(int i=0;i<MALLOC_SIZE;i++)
-                {
-                    array[i] = 0;
-                }
-
-                pclose(stream);
-            }
-
-            
             cout << "Closing the program..." << endl;
-            close_file(fd);
-            free(array);
         }
         
 
@@ -124,8 +90,52 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+void LCD_GPIO::LCD_get_memory_usage()
+{
 
-void LCD_Blinking_Cursor(bool state)
+}
+
+void LCD_GPIO::LCD_get_cpu_temp()
+{
+    //clearing data containers
+    str.clear();
+    for(int i=0;i<MALLOC_SIZE;i++)
+    {
+        array[i] = 0;
+    }
+
+    stream =popen("vcgencmd measure_temp","r");
+    fgets(array,MALLOC_SIZE,stream);
+                
+    int z = 0;
+    while(array[z] != '\n')
+    {
+        str = str + array[z];
+        z++;
+    }
+    str = "CPU "+ str;
+    pclose(stream);
+
+    LCD_String(str);
+}
+
+LCD_GPIO::~LCD_GPIO()
+{
+    close_file(fd); 
+    free(array);
+}
+
+LCD_GPIO::LCD_GPIO()
+{
+    array = (char *)malloc(MALLOC_SIZE);
+    for(int i=0;i<MALLOC_SIZE;i++)
+    {
+        array[i] = 0;
+    }
+    fd = open_file();
+}
+
+void LCD_GPIO::LCD_Blinking_Cursor(bool state)
 {
     if(state)
     {
@@ -139,7 +149,7 @@ void LCD_Blinking_Cursor(bool state)
     }
 }
 
-void LCD_Set_Cursor(int row)
+void LCD_GPIO::LCD_Set_Cursor(int row)
 {
     unsigned char Temp,Low4,High4;
     if(row == 1)
@@ -155,7 +165,7 @@ void LCD_Set_Cursor(int row)
     }
 }
 
-void LCD_Write_Char(char Data)
+void LCD_GPIO::LCD_Write_Char(char Data)
 {
     char Low4,High4;
     High4 = Data & 0xF0;
@@ -166,7 +176,7 @@ void LCD_Write_Char(char Data)
     LCD_xxx(static_cast<int>(Low4));
 }
 
-void LCD_Clear()
+void LCD_GPIO::LCD_Clear()
 {
     string str = "                "; // 16x " "
     LCD_Set_Cursor(1);
@@ -178,7 +188,7 @@ void LCD_Clear()
     LCD_Set_Cursor(1);
 }
 
-void LCD_String(string str)
+void LCD_GPIO::LCD_String(string str)
 {
     for(int i=0;i<str.length(); i++)
     {
@@ -186,7 +196,7 @@ void LCD_String(string str)
     }
 }
 
-void LCD_xxx(int val)
+void LCD_GPIO::LCD_xxx(int val)
 {
     // Select Data Register
     tab[5] = 1;
@@ -209,7 +219,7 @@ void LCD_xxx(int val)
 
 }
 
-void LCD_Command(unsigned char command) //4bit mode
+void LCD_GPIO::LCD_Command(unsigned char command) //4bit mode
 {
     // Select Command Register
     tab[5] = 0;
@@ -230,27 +240,38 @@ void LCD_Command(unsigned char command) //4bit mode
     usleep(LCD_EN_Pulse);
 }
 
-void LCD_Init()
+int LCD_GPIO::LCD_Init()
 {
     // The Init. Procedure //1st option
-  
-    LCD_Command(0x00);
-    usleep(30);
-    usleep(LCD_EN_Delay);
-    LCD_Command(0x03);
-    usleep(5);
-    LCD_Command(0x03);
-    usleep(150);
-    LCD_Command(0x03);
-    LCD_Command(0x02);
-    LCD_Command(0x02);
-    LCD_Command(0x08);
-    LCD_Command(0x00);
-    LCD_Command(0x0C);
-    LCD_Command(0x00);
-    LCD_Command(0x06);
+    if(init_chip(fd,info) > -1)
+    {
+        init_8pins(fd,rq);
+        usleep(150000);
 
-    LCD_Command(0x00);
-    LCD_Command(0x01);
+        LCD_Command(0x00);
+        usleep(30);
+        usleep(LCD_EN_Delay);
+        LCD_Command(0x03);
+        usleep(5);
+        LCD_Command(0x03);
+        usleep(150);
+        LCD_Command(0x03);
+        LCD_Command(0x02);
+        LCD_Command(0x02);
+        LCD_Command(0x08);
+        LCD_Command(0x00);
+        LCD_Command(0x0C);
+        LCD_Command(0x00);
+        LCD_Command(0x06);
+
+        LCD_Command(0x00);
+        LCD_Command(0x01);
+        stat = 1;
+    }
+    else
+    {
+        stat = -1;
+    }
     
+    return LCD_If_error();
 }
