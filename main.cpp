@@ -40,7 +40,7 @@ class LCD_GPIO
     void LCD_get_cpu_temp();
     void LCD_get_memory_usage();
 
-    private:
+    //private:
 
     //global variables
     bool tab[8]{0,0,0,0,0,0,0,0};
@@ -71,16 +71,18 @@ int main(int argc, char *argv[])
         {
             for(int i=0;i<10;i++)
             {
-                lcd.LCD_Clear();
+
                 //send data to first line
                 lcd.LCD_Set_Cursor(1);
+                lcd.LCD_Clear();
                 lcd.LCD_get_cpu_temp();
 
                 //send data to second line
                 lcd.LCD_Set_Cursor(2);
                 lcd.LCD_get_memory_usage();
                 
-                usleep(1000000); //check info every 1.0 second
+                usleep(500000); //check info every 1.0 second
+
               
             }  
 
@@ -134,8 +136,8 @@ void LCD_GPIO::LCD_get_memory_usage()
         }
     }   
 
-    cout << total << endl;
-    cout << avail << endl;
+    //cout << total << endl;
+    //cout << avail << endl;
 
     for(int i=0;i<total.length();i++)
     {
@@ -153,8 +155,8 @@ void LCD_GPIO::LCD_get_memory_usage()
         }
     }
 
-    cout << number_total << endl;
-    cout << number_avail << endl;
+    //cout << number_total << endl;
+    //cout << number_avail << endl;
 
     float val_total = stoi(number_total) + 0.00; 
     float val_avail = stoi(number_avail) + 0.00; 
@@ -169,7 +171,8 @@ void LCD_GPIO::LCD_get_memory_usage()
 
 void LCD_GPIO::LCD_get_cpu_temp()
 {
-    //clearing data containers
+    std::string str;
+
     str.clear();
     for(int i=0;i<MALLOC_SIZE;i++)
     {
@@ -185,8 +188,9 @@ void LCD_GPIO::LCD_get_cpu_temp()
         str = str + array[z];
         z++;
     }
-    str = "CPU "+ str;
+    //str = "CPU "+ str;
     pclose(stream);
+
 
     LCD_String(str);
 }
@@ -223,7 +227,6 @@ void LCD_GPIO::LCD_Blinking_Cursor(bool state)
 
 void LCD_GPIO::LCD_Set_Cursor(int row)
 {
-    unsigned char Temp,Low4,High4;
     if(row == 1)
     {
         LCD_Command(0x80 >> 4);
@@ -248,26 +251,6 @@ void LCD_GPIO::LCD_Write_Char(char Data)
     LCD_xxx(static_cast<int>(Low4));
 }
 
-void LCD_GPIO::LCD_Clear()
-{
-    string str = "                "; // 16x " "
-    LCD_Set_Cursor(1);
-    LCD_String(str);
-
-    LCD_Set_Cursor(2);
-    LCD_String(str);
-
-    LCD_Set_Cursor(1);
-}
-
-void LCD_GPIO::LCD_String(string str)
-{
-    for(int i=0;i<str.length(); i++)
-    {
-        LCD_Write_Char(str[i]);
-    }
-}
-
 void LCD_GPIO::LCD_xxx(int val)
 {
     // Select Data Register
@@ -278,10 +261,10 @@ void LCD_GPIO::LCD_xxx(int val)
     {
         (val & static_cast<int>(pow(2,i)))? tab[i] = 1 : tab[i] = 0;
     }
-   
+
     // Send The EN Clock Signal
     tab[4] = 1;
-    send_8bit(fd,rq,tab); 
+    send_8bit(fd,rq,tab);
     usleep(LCD_EN_Delay);
 
     // Stop Sending The EN Clock Signal
@@ -289,6 +272,27 @@ void LCD_GPIO::LCD_xxx(int val)
     send_8bit(fd,rq,tab);
     usleep(LCD_EN_Delay);
 
+}
+
+void LCD_GPIO::LCD_Clear()
+{
+    string strx = "                "; // 16x " "
+    //string strx = "xxxxxxxxxxxxxxxx"; // 16x " "
+    LCD_Set_Cursor(1);
+    LCD_String(strx);
+
+    LCD_Set_Cursor(2);
+    LCD_String(strx);
+
+    LCD_Set_Cursor(1);
+}
+
+void LCD_GPIO::LCD_String(string str)
+{
+    for(int i=0;i<str.length(); i++)
+    {
+        LCD_Write_Char(str[i]);
+    }
 }
 
 void LCD_GPIO::LCD_Command(unsigned char command) //4bit mode
@@ -318,7 +322,7 @@ int LCD_GPIO::LCD_Init()
     if(init_chip(fd,info) > -1)
     {
         init_8pins(fd,rq);
-        usleep(150000);
+        //usleep(50000);
 
         LCD_Command(0x00);
         usleep(30);
