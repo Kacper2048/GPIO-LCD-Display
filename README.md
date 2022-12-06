@@ -6,7 +6,7 @@
  Pertfolio Project to get a job. The main goal of that is showing the temp of cpu and percents of memory usage. 
  It refresh itself every 0.5sec.
 
- Here is a link to get a model of lcd case: 
+ Here is a link to get a model of lcd case: https://cults3d.com/en/3d-model/gadget/lcd-display-case
    
 ### Requires
 
